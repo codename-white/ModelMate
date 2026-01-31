@@ -1,98 +1,102 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, View, Text, FlatList, Image, TouchableOpacity, ActivityIndicator, SafeAreaView } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+interface Model {
+  id: string;
+  name: string;
+  thumbnail: string;
+  city: string;
+}
 
-export default function HomeScreen() {
+export default function FeedScreen() {
+  const [models, setModels] = useState<Model[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchModels();
+  }, []);
+
+  const fetchModels = async () => {
+    try {
+      const response = await fetch('https://randomuser.me/api/?results=15');
+      const data = await response.json();
+      const formattedData = data.results.map((item: any) => ({
+        id: item.login.uuid,
+        name: `${item.name.first} ${item.name.last}`,
+        thumbnail: item.picture.large,
+        city: item.location.city,
+      }));
+      setModels(formattedData);
+      setLoading(false);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const saveFavorite = async (model: Model) => {
+    try {
+      const existing = await AsyncStorage.getItem('@fav_models');
+      let favs = existing ? JSON.parse(existing) : [];
+      
+      // ตรวจสอบว่ามีอยู่แล้วหรือยัง
+      if (!favs.some((f: Model) => f.id === model.id)) {
+        favs.push(model);
+        await AsyncStorage.setItem('@fav_models', JSON.stringify(favs));
+        alert('บันทึกเรียบร้อย!');
+      } else {
+        alert('มีในรายการโปรดแล้ว');
+      }
+    } catch (e) { console.error(e); }
+  };
+
+  if (loading) return <ActivityIndicator size="large" color="#FF4757" style={styles.centered} />;
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
-
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.headerTitle}>ModelMate Explore</Text>
+      <FlatList
+        data={models}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={{ paddingBottom: 20 }}
+        renderItem={({ item }) => (
+          <View style={styles.card}>
+            <Image source={{ uri: item.thumbnail }} style={styles.image} />
+            <View style={styles.info}>
+              <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
+              <Text style={styles.city}>{item.city}</Text>
+              <TouchableOpacity style={styles.btn} onPress={() => saveFavorite(item)}>
+                <Text style={styles.btnText}>สนใจร่วมงาน</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+      />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: { flex: 1, backgroundColor: '#F0F2F5' },
+  headerTitle: { fontSize: 24, fontWeight: 'bold', padding: 20, color: '#2F3542' },
+  centered: { flex: 1, justifyContent: 'center' },
+  card: { 
+    flexDirection: 'row', 
+    padding: 16, 
+    marginHorizontal: 16, 
+    marginVertical: 8, 
+    backgroundColor: 'white', 
+    borderRadius: 15,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 3,
+    alignItems: 'center'
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
+  image: { width: 80, height: 80, borderRadius: 40, borderWidth: 2, borderColor: '#FF4757' },
+  info: { marginLeft: 16, flex: 1 }, // ทำให้ขนาดกล่องข้อความขยายเท่ากันทุกใบ
+  name: { fontSize: 18, fontWeight: 'bold', color: '#2F3542' },
+  city: { fontSize: 14, color: '#747D8C', marginBottom: 8 },
+  btn: { backgroundColor: '#FF4757', paddingVertical: 8, paddingHorizontal: 15, borderRadius: 8, alignSelf: 'flex-start' },
+  btnText: { color: 'white', fontWeight: 'bold', fontSize: 13 }
 });
