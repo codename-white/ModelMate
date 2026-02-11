@@ -1,28 +1,24 @@
 import React from 'react';
-import { StyleSheet, View, Text, FlatList, TouchableOpacity, Linking } from 'react-native';
+import { StyleSheet, View, Text, FlatList } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 
-// ข้อมูลบทความความรู้สำหรับตากล้อง
 const tips = [
-  { id: '1', title: 'การตั้งค่า ISO สำหรับถ่าย Portrait', icon: 'camera' },
-  { id: '2', title: '5 สถานที่ถ่ายรูปในกรุงเทพฯ ที่แสงสวยที่สุด', icon: 'map' },
-  { id: '3', title: 'เทคนิคการจัดองค์ประกอบภาพแบบกฎสามส่วน', icon: 'image' },
-  { id: '4', title: 'วิธีการคุยกับนางแบบสำหรับมือใหม่', icon: 'comments' },
+  { id: '1', title: 'การใช้กฎสามส่วน (Rule of Thirds)', icon: 'camera' },
+  { id: '2', title: 'การเลือกโลเคชั่นช่วง Golden Hour', icon: 'sun-o' },
+  { id: '3', title: 'เทคนิคการโพสต์ท่านางแบบมือใหม่', icon: 'user' },
 ];
 
 export default function ExploreScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.header}> Photographer Tips </Text>
+      <Text style={styles.header}>Photographer Tips</Text>
       <FlatList
         data={tips}
-        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.itemCard}>
+          <View style={styles.tipCard}>
             <FontAwesome name={item.icon as any} size={24} color="#FF4757" />
-            <Text style={styles.itemText}>{item.title}</Text>
-            <FontAwesome name="chevron-right" size={16} color="#ccc" />
-          </TouchableOpacity>
+            <Text style={styles.tipText}>{item.title}</Text>
+          </View>
         )}
       />
     </View>
@@ -30,18 +26,8 @@ export default function ExploreScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F0F2F5', padding: 20 },
-  header: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, marginTop: 40, color: '#2F3542' },
-  itemCard: {
-    flexDirection: 'row',
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 12,
-    marginBottom: 10,
-    alignItems: 'center',
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    elevation: 2,
-  },
-  itemText: { flex: 1, marginLeft: 15, fontSize: 16, fontWeight: '500', color: '#2F3542' }
+  container: { flex: 1, backgroundColor: '#fff', padding: 20 },
+  header: { fontSize: 24, fontWeight: 'bold', marginTop: 40, marginBottom: 20 },
+  tipCard: { flexDirection: 'row', backgroundColor: '#f9f9f9', padding: 20, borderRadius: 12, marginBottom: 10, alignItems: 'center' },
+  tipText: { marginLeft: 15, fontSize: 16 }
 });
